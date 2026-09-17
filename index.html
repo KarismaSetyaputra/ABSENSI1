@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!-- =========================================================================
+     index.html  —  Konversi dari login.php
+     ====================================================================== -->
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="style.css?v=3">
+    <style>
+        .role-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .role-switch label {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid var(--glass-border, #DCE4DF);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted, #6D7D77);
+            transition: all 0.2s ease;
+            background: var(--neutral-tint, rgba(255,255,255,0.06));
+        }
+        /* Radio disembunyikan secara visual, tetapi tetap bisa diakses keyboard */
+        .role-switch input[type="radio"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .role-switch input[type="radio"]:checked + span {
+            color: #ffffff;
+        }
+        .role-switch input[type="radio"]:focus-visible + span {
+            text-decoration: underline;
+        }
+        .role-switch label.active {
+            background: var(--warning-tint);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+        .error-msg {
+            color: var(--danger-bg, #C1443B);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .success-msg {
+            color: var(--accent-cyan);
+            background: var(--success-tint);
+            border: 1px solid var(--success-border);
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        .hint {
+            font-size: 0.8rem;
+            color: var(--text-muted, #6D7D77);
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
+        .register-link {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--text-muted, #6D7D77);
+        }
+    </style>
+</head>
+<body>
+
+<form action="index.html" method="POST" id="login-form">
+    <h2>Login</h2>
+
+    <p class="error-msg" id="error-msg" hidden></p>
+    <p class="success-msg" id="success-msg" hidden></p>
+
+    <div class="role-switch">
+        <label id="label-admin">
+            <input type="radio" name="role" value="admin" checked>
+            <span>Admin</span>
+        </label>
+        <label id="label-murid">
+            <input type="radio" name="role" value="murid">
+            <span>Murid</span>
+        </label>
+    </div>
+
+    <label id="label-username" for="input-username">Username</label>
+    <input type="text" name="username" id="input-username" placeholder="Masukkan username" required>
+    <p class="hint" id="hint-username" hidden>Gunakan NIS kamu sebagai username</p>
+
+    <label for="input-password">Password</label>
+    <input type="password" name="password" id="input-password" placeholder="Masukkan password" required>
+    <p class="hint" id="hint-password" hidden>Password default = NIS kamu</p>
+
+    <button type="submit" name="login">Login</button>
+
+    <p class="register-link" id="register-link" hidden>
+        Belum punya akun? <a href="daftar.html">Daftar di sini</a>
+    </p>
+</form>
+
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+
+<script src="koneksi.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    const form = document.getElementById('login-form');
+    const errorMsg = document.getElementById('error-msg');
+    const successMsg = document.getElementById('success-msg');
+
+    /* Menggantikan $_GET['error'], $_GET['success'], $_GET['role'] */
+    const error = App.param('error');
+    const success = App.param('success');
+    const roleSelected = App.param('role') === 'murid' ? 'murid' : 'admin';
+
+    if (error) {
+        errorMsg.textContent = error;
+        errorMsg.hidden = false;
+    }
+
+    if (success) {
+        successMsg.textContent = success;
+        successMsg.hidden = false;
+    }
+
+    document.querySelector('input[name="role"][value="' + roleSelected + '"]').checked = true;
+
+    function updateRole() {
+        const role = document.querySelector('input[name="role"]:checked').value;
+
+        document.getElementById('label-admin').classList.toggle('active', role === 'admin');
+        document.getElementById('label-murid').classList.toggle('active', role === 'murid');
+
+        const isMurid = role === 'murid';
+        document.getElementById('label-username').textContent = isMurid ? 'NIS' : 'Username';
+        document.getElementById('input-username').placeholder = isMurid ? 'Masukkan NIS' : 'Masukkan username';
+        document.getElementById('hint-username').hidden = !isMurid;
+        document.getElementById('hint-password').hidden = !isMurid;
+        document.getElementById('register-link').hidden = !isMurid;
+    }
+
+    document.querySelectorAll('input[name="role"]').forEach(function (radio) {
+        radio.addEventListener('change', updateRole);
+    });
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const username = document.getElementById('input-username').value;
+        const password = document.getElementById('input-password').value;
+
+        /* proses_login.php */
+        const hasil = Auth.login(role, username, password);
+        App.redirect(hasil.redirect);
+    });
+
+    updateRole();
+})();
+</script>
+
+</body>
+</html>

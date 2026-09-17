@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<!-- =========================================================================
+     edit.html  —  Konversi dari edit.php
+     ====================================================================== -->
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Absensi</title>
+    <link rel="stylesheet" type="text/css" href="style.css?v=3">
+    <style>
+        .status-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .status-switch label {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid var(--glass-border, #DCE4DF);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted, #6D7D77);
+            background: var(--neutral-tint, rgba(255,255,255,0.06));
+            transition: all 0.2s ease;
+        }
+        .status-switch input[type="radio"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .status-switch input[type="radio"]:focus-visible + span {
+            text-decoration: underline;
+        }
+        .status-switch label.active-hadir { background: var(--success-tint); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .status-switch label.active-izin  { background: var(--warning-tint); border-color: var(--accent-gold); color: var(--accent-gold); }
+        .status-switch label.active-sakit { background: var(--danger-tint); border-color: #E2564A; color: #F17A6E; }
+        .foto-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--glass-border);
+        }
+        .info-msg {
+            background: var(--warning-tint);
+            border: 1px solid var(--warning-border);
+            color: var(--accent-gold);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .error-msg {
+            color: var(--danger-bg, #C1443B);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<form action="edit.html" method="POST" id="form-edit">
+    <h2>Edit Absensi</h2>
+
+    <p class="info-msg" id="info-msg" hidden></p>
+    <p class="error-msg" id="error-msg" hidden></p>
+
+    <input type="hidden" name="id" id="input-id" value="">
+
+    <label for="label-status">Status</label>
+    <div class="status-switch" id="label-status" role="group" aria-label="Status absensi">
+        <label id="label-hadir">
+            <input type="radio" name="status" value="Hadir">
+            <span>Hadir</span>
+        </label>
+        <label id="label-izin">
+            <input type="radio" name="status" value="Izin">
+            <span>Izin</span>
+        </label>
+        <label id="label-sakit">
+            <input type="radio" name="status" value="Sakit">
+            <span>Sakit</span>
+        </label>
+    </div>
+
+    <div id="foto-lama" hidden>
+        <label for="foto-preview">Foto Bukti Saat Ini</label>
+        <img id="foto-preview" src="" class="foto-preview" alt="Foto absensi">
+    </div>
+
+    <label for="input-keterangan">Keterangan (untuk Izin/Sakit)</label>
+    <textarea name="keterangan" id="input-keterangan" placeholder="Tulis alasan izin/sakit"></textarea>
+
+    <label for="input-tanggal">Tanggal Absensi</label>
+    <input type="date" name="tanggal_absensi" id="input-tanggal" required>
+
+    <label for="input-waktu">Waktu Absensi</label>
+    <input type="time" name="waktu_absensi" id="input-waktu" required>
+
+    <button type="submit" name="update">Update</button>
+    <br><br>
+    <a href="dashboard_murid.html">&larr; Batal / Kembali</a>
+</form>
+
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+
+<script src="koneksi.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    /* if (!isset($_SESSION['login']) || $_SESSION['role'] !== 'murid') */
+    const session = Guard.require('murid');
+    if (!session) {
+        return;
+    }
+
+    const errorMsg = document.getElementById('error-msg');
+    const infoMsg = document.getElementById('info-msg');
+
+    /* $id = isset($_GET['id']) ? $_GET['id'] : ... */
+    const id = App.param('id');
+
+    if (!id) {
+        App.redirect('dashboard_murid.html');
+        return;
+    }
+
+    /* Pastikan absensi ini benar-benar milik murid yang sedang login */
+    const data = Absensi.milikMurid(id, session.id_siswa);
+
+    if (!data) {
+        App.redirect('dashboard_murid.html?msg=' + encodeURIComponent('Data absensi tidak ditemukan'));
+        return;
+    }
+
+    /* Pesan dari query string (mis. status tidak valid) */
+    const msg = App.param('msg');
+    if (msg) {
+        infoMsg.textContent = msg;
+        infoMsg.hidden = false;
+    }
+
+    /* Mengisi form dengan data yang ada */
+    document.getElementById('input-id').value = data.id_absensi;
+    document.querySelector('input[name="status"][value="' + data.status + '"]').checked = true;
+    document.getElementById('input-keterangan').value = data.keterangan ? data.keterangan : '';
+    document.getElementById('input-tanggal').value = data.tanggal_absensi;
+    document.getElementById('input-waktu').value = App.tampilJam(data.waktu_absensi);
+
+    const sumberFoto = Koneksi.getBerkas(data.foto);
+    if (data.foto && sumberFoto) {
+        document.getElementById('foto-preview').src = sumberFoto;
+        document.getElementById('foto-lama').hidden = false;
+    }
+
+    function updateStatus() {
+        const status = document.querySelector('input[name="status"]:checked').value;
+        document.getElementById('label-hadir').classList.toggle('active-hadir', status === 'Hadir');
+        document.getElementById('label-izin').classList.toggle('active-izin', status === 'Izin');
+        document.getElementById('label-sakit').classList.toggle('active-sakit', status === 'Sakit');
+    }
+
+    document.querySelectorAll('input[name="status"]').forEach(function (radio) {
+        radio.addEventListener('change', updateStatus);
+    });
+    updateStatus();
+
+    /* Proses update (edit.php) */
+    document.getElementById('form-edit').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const status = document.querySelector('input[name="status"]:checked').value;
+        const keterangan = document.getElementById('input-keterangan').value;
+        const tanggal = document.getElementById('input-tanggal').value;
+        const waktu = document.getElementById('input-waktu').value;
+
+        /* waktu_absensi disimpan lengkap (HH:MM:SS) seperti di MySQL */
+        const waktuLengkap = waktu.length === 5 ? waktu + ':00' : waktu;
+
+        const hasil = Absensi.perbarui(data.id_absensi, session.id_siswa, {
+            tanggalAbsensi: tanggal,
+            waktuAbsensi: waktuLengkap,
+            status: status,
+            keterangan: keterangan
+        });
+
+        if (!hasil.ok) {
+            infoMsg.hidden = true;
+            errorMsg.textContent = hasil.msg;
+            errorMsg.hidden = false;
+            return;
+        }
+
+        App.redirect('dashboard_murid.html?msg=' + encodeURIComponent(hasil.msg));
+    });
+})();
+</script>
+
+</body>
+</html>

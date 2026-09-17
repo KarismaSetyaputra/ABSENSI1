@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!-- =========================================================================
+     daftar.html  —  Konversi dari daftar.php
+     ====================================================================== -->
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Daftar Akun Murid</title>
+    <link rel="stylesheet" type="text/css" href="style.css?v=3">
+    <style>
+        .error-msg {
+            color: var(--danger-bg, #C1443B);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<form action="daftar.html" method="POST" id="form-daftar">
+    <h2>Daftar Akun Murid</h2>
+
+    <p class="error-msg" id="error-msg" hidden></p>
+
+    <label for="input-nis">NIS</label>
+    <input type="text" name="nis" id="input-nis" placeholder="Masukkan NIS" required>
+
+    <label for="input-nama">Nama</label>
+    <input type="text" name="nama" id="input-nama" placeholder="Masukkan Nama Lengkap" required>
+
+    <label for="input-jurusan">Jurusan</label>
+    <select name="jurusan" id="input-jurusan" required>
+        <option value="" disabled selected>-- Pilih Jurusan --</option>
+        <option value="RPL">RPL</option>
+        <option value="TKJ 1">TKJ 1</option>
+        <option value="TKJ 2">TKJ 2</option>
+        <option value="BR 1">BR 1</option>
+        <option value="BR 2">BR 2</option>
+        <option value="AK 1">AK 1</option>
+        <option value="AK 2">AK 2</option>
+        <option value="MP 1">MP 1</option>
+        <option value="MP 2">MP 2</option>
+    </select>
+
+    <label for="input-alamat">Alamat</label>
+    <textarea name="alamat" id="input-alamat" placeholder="Masukkan Alamat" required></textarea>
+
+    <label for="input-password">Password</label>
+    <input type="password" name="password" id="input-password" placeholder="Buat password" required>
+
+    <label for="input-konfirmasi">Konfirmasi Password</label>
+    <input type="password" name="konfirmasi_password" id="input-konfirmasi" placeholder="Ulangi password" required>
+
+    <button type="submit" name="daftar">Buat Akun</button>
+    <br><br>
+    <a href="index.html?role=murid">&larr; Sudah punya akun? Login</a>
+</form>
+
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+
+<script src="koneksi.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    const form = document.getElementById('form-daftar');
+    const errorMsg = document.getElementById('error-msg');
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        /* daftar.php */
+        const hasil = Auth.daftar({
+            nis: document.getElementById('input-nis').value,
+            nama: document.getElementById('input-nama').value,
+            jurusan: document.getElementById('input-jurusan').value,
+            alamat: document.getElementById('input-alamat').value,
+            password: document.getElementById('input-password').value,
+            konfirmasiPassword: document.getElementById('input-konfirmasi').value
+        });
+
+        if (!hasil.ok) {
+            errorMsg.textContent = hasil.error;
+            errorMsg.hidden = false;
+            return;
+        }
+
+        App.redirect(hasil.redirect);
+    });
+})();
+</script>
+
+</body>
+</html>

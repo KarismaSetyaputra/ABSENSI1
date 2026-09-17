@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!-- =========================================================================
+     logout.html  —  Konversi dari logout.php
+     ====================================================================== -->
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Konfirmasi Logout</title>
+    <link rel="stylesheet" type="text/css" href="style.css?v=3">
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 10;
+        }
+        .modal-box {
+            max-width: 420px;
+            width: 90%;
+            padding: 30px;
+            text-align: center;
+            background: var(--glass-bg, #FFFFFF);
+            border: 1px solid var(--glass-border, #DCE4DF);
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(22, 36, 30, 0.1);
+            position: relative;
+            z-index: 11;
+        }
+        .modal-icon { font-size: 45px; margin-bottom: 15px; display: inline-block; }
+        .modal-box h3 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-heading, #16241E);
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        .modal-box p {
+            font-size: 0.95rem;
+            color: var(--text-color, #33413C);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .button-group { display: flex; gap: 12px; justify-content: center; }
+        .btn-logout {
+            background: var(--button-bg, #2F6F5E);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+        .btn-logout:hover {
+            background: var(--button-hover, #234F42);
+        }
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-color);
+            border: 1px solid var(--glass-border);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+        }
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-heading);
+            border-color: var(--accent-gold);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-icon">&#128682;</div>
+        <h3>Konfirmasi Logout</h3>
+        <p>Apakah kamu yakin ingin keluar dari sistem?</p>
+
+        <form method="POST" id="form-logout">
+            <div class="button-group">
+                <button type="submit" name="confirm_logout" class="btn-logout">Ya, Logout</button>
+                <a href="dashboard_murid.html" class="btn-cancel" id="btn-batal">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+
+<script src="koneksi.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    /* if (!isset($_SESSION['login'])) { header("Location: login.php"); exit; } */
+    const session = Guard.requireLogin();
+    if (!session) {
+        return;
+    }
+
+    /* $kembali = ($_SESSION['role'] === 'admin') ? 'dashboard_admin.php' : 'dashboard_murid.php'; */
+    document.getElementById('btn-batal').setAttribute('href', Auth.halamanKembali());
+
+    /* Jika tombol "Ya, Logout" diklik */
+    document.getElementById('form-logout').addEventListener('submit', function (event) {
+        event.preventDefault();
+        App.redirect(Auth.logout());
+    });
+})();
+</script>
+
+</body>
+</html>
